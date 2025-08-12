@@ -1,0 +1,588 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-08-11T13:40:43Z",
+  "__export_source": "guaranishopapi:insomnia-generator:1.0",
+  "resources": [
+    {
+      "_id": "wrk_f2aa7e9cfc72",
+      "_type": "workspace",
+      "name": "Shop API",
+      "parentId": null
+    },
+    {
+      "_id": "env_efd4387556a5",
+      "_type": "environment",
+      "parentId": "wrk_f2aa7e9cfc72",
+      "name": "Base Environment",
+      "data": {
+        "baseUrl": "http://localhost:8080",
+        "jwt": "<cole o token aqui>",
+        "adminUser": "admin",
+        "adminPass": "admin",
+        "clientUser": "client",
+        "clientPass": "client",
+        "orderId": 1,
+        "productId1": 1,
+        "productId2": 2,
+        "paymentMethod": "CREDIT_CARD"
+      }
+    },
+    {
+      "_id": "fld_8bd5236976da",
+      "_type": "request_group",
+      "parentId": "wrk_f2aa7e9cfc72",
+      "name": "Auth"
+    },
+    {
+      "_id": "fld_5e875936befc",
+      "_type": "request_group",
+      "parentId": "wrk_f2aa7e9cfc72",
+      "name": "Products"
+    },
+    {
+      "_id": "fld_b6fe088cbb91",
+      "_type": "request_group",
+      "parentId": "wrk_f2aa7e9cfc72",
+      "name": "Orders (Admin)"
+    },
+    {
+      "_id": "req_be7b38d9d044",
+      "_type": "request",
+      "parentId": "fld_8bd5236976da",
+      "name": "Register",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/auth/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"username\": \"poncho\", \"password\": \"StrongPass@123\"}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_e3f5f0477a3d",
+      "_type": "request",
+      "parentId": "fld_8bd5236976da",
+      "name": "Login (admin)",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"username\": \"admin\", \"password\": \"admin123\"}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_2954a1651d7b",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "List",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/products",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_7f25bfd012df",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Get by id",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/products/1",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_3da8871580b6",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Create",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/products",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ jwt }}"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\": \"Mouse\", \"description\": \"Ergonomic\", \"price\": 199.0, \"category\": \"eletronicos\"}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_290d35c5d7a0",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Update (id=1)",
+      "method": "PUT",
+      "url": "{{ baseUrl }}/api/products/1",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ jwt }}"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\": \"Mouse\", \"description\": \"Gaming\", \"price\": 249.0, \"category\": \"eletronicos\"}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_db0b9968fbde",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Delete (id=1)",
+      "method": "DELETE",
+      "url": "{{ baseUrl }}/api/products/1",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ jwt }}"
+        }
+      ],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_bcd7835e4afe",
+      "_type": "request",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "Create",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/orders",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ jwt }}"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"items\": [{\"productId\": 1, \"quantity\": 2}]}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_f59c2353999d",
+      "_type": "request",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "List",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/orders",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}"
+        }
+      ],
+      "body": {},
+      "parameters": [
+        {
+          "name": "status",
+          "value": ""
+        },
+        {
+          "name": "from",
+          "value": ""
+        },
+        {
+          "name": "to",
+          "value": ""
+        },
+        {
+          "name": "minTotal",
+          "value": ""
+        },
+        {
+          "name": "maxTotal",
+          "value": ""
+        },
+        {
+          "name": "page",
+          "value": "0"
+        },
+        {
+          "name": "size",
+          "value": "20"
+        },
+        {
+          "name": "sort",
+          "value": "createdAt,desc"
+        }
+      ],
+      "authentication": {}
+    },
+    {
+      "_id": "req_3977ea0a9819",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Search (filters+pagination)",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/products/search?name=lap&category=eletronicos&minPrice=1000&maxPrice=9000&page=0&size=20&sort=price,asc",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_e82f5071aaa7",
+      "_type": "request",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "Get by id",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/orders/1",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ jwt }}"
+        }
+      ],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_b22c7ea614ae",
+      "_type": "request",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "List (with filters)",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/orders?status=PENDING&from=2025-08-01&to=2025-08-31&minTotal=100&maxTotal=1000&page=0&size=20&sort=createdAt,desc",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ jwt }}"
+        }
+      ],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_90e253f2e833",
+      "_type": "request",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "Update (id=1)",
+      "method": "PUT",
+      "url": "{{ baseUrl }}/api/orders/1",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ jwt }}"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"items\": [{\"productId\": 1, \"quantity\": 3}], \"discount\": 50.0, \"shippingFee\": 20.0}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_17b3f62e40e2",
+      "_type": "request",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "Update status (id=1 -> SHIPPED)",
+      "method": "PATCH",
+      "url": "{{ baseUrl }}/api/orders/{{ orderId }}/status",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"status\": \"PAID\"}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_7be49dc20106",
+      "_type": "request",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "Delete (id=1) [ADMIN]",
+      "method": "DELETE",
+      "url": "{{ baseUrl }}/api/orders/1",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}"
+        }
+      ],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "fld_3523455500f4",
+      "_type": "request_group",
+      "parentId": "fld_b6fe088cbb91",
+      "name": "Payments"
+    },
+    {
+      "_id": "req_f69dfda4b0cc",
+      "_type": "request",
+      "parentId": "fld_3523455500f4",
+      "name": "Create payment (orderId={{ orderId }}) [client]",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/orders/{{ orderId }}/payments",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_d1336495e7ae', 'json', 'token' %}"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"method\": \"{{ paymentMethod }}\"}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_f53ef54260d5",
+      "_type": "request",
+      "parentId": "fld_3523455500f4",
+      "name": "Approve payment (orderId={{ orderId }}) [admin]",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/orders/{{ orderId }}/payments/{% response 'body', 'req_f69dfda4b0cc', 'raw' %}/approve",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}"
+        }
+      ],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "fld_196cb9de0d03",
+      "_type": "request_group",
+      "parentId": "wrk_f2aa7e9cfc72",
+      "name": "Orders (Client)"
+    },
+    {
+      "_id": "req_d1336495e7ae",
+      "_type": "request",
+      "parentId": "fld_8bd5236976da",
+      "name": "Login (client)",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"username\": \"{{ clientUser }}\", \"password\": \"{{ clientPass }}\"}"
+      }
+    },
+    {
+      "_id": "req_2a0ec0217c34",
+      "_type": "request",
+      "parentId": "fld_196cb9de0d03",
+      "name": "List orders [client]",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/orders",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_d1336495e7ae', 'json', 'token' %}"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "status",
+          "value": ""
+        },
+        {
+          "name": "from",
+          "value": ""
+        },
+        {
+          "name": "to",
+          "value": ""
+        },
+        {
+          "name": "minTotal",
+          "value": ""
+        },
+        {
+          "name": "maxTotal",
+          "value": ""
+        },
+        {
+          "name": "page",
+          "value": "0"
+        },
+        {
+          "name": "size",
+          "value": "20"
+        },
+        {
+          "name": "sort",
+          "value": "createdAt,desc"
+        }
+      ],
+      "authentication": {},
+      "body": {}
+    },
+    {
+      "_id": "req_166b70f9249f",
+      "_type": "request",
+      "parentId": "fld_196cb9de0d03",
+      "name": "Update order (id={{ orderId }}) [client]",
+      "method": "PUT",
+      "url": "{{ baseUrl }}/api/orders/{{ orderId }}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_d1336495e7ae', 'json', 'token' %}"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"items\": [{\"productId\": \"{{ productId1 }}\", \"quantity\": 1}, {\"productId\": \"{{ productId2 }}\", \"quantity\": 2}], \"discount\": 0, \"shippingFee\": 0}"
+      }
+    },
+    {
+      "_id": "req_6c41aa1e044c",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "List products (public)",
+      "method": "GET",
+      "url": "{{ baseUrl }}/api/products",
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "body": {}
+    },
+    {
+      "_id": "req_d20c65b02a43",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Create product [admin]",
+      "method": "POST",
+      "url": "{{ baseUrl }}/api/products",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\": \"Notebook Pro 14\", \"description\": \"i7/16GB/512GB\", \"category\": \"eletronicos\", \"price\": 7999.9}"
+      }
+    },
+    {
+      "_id": "req_cbaabc8883b9",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Update product (id={{ productId1 }}) [admin]",
+      "method": "PUT",
+      "url": "{{ baseUrl }}/api/products/{{ productId1 }}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\": \"Notebook Pro 14 (2025)\", \"description\": \"i7/32GB/1TB\", \"category\": \"eletronicos\", \"price\": 9999.9}"
+      }
+    },
+    {
+      "_id": "req_77b6e5a3d6e7",
+      "_type": "request",
+      "parentId": "fld_5e875936befc",
+      "name": "Delete product (id={{ productId1 }}) [admin]",
+      "method": "DELETE",
+      "url": "{{ baseUrl }}/api/products/{{ productId1 }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "body": {}
+    }
+  ]
+}
