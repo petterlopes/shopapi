@@ -1,0 +1,592 @@
+type: collection.insomnia.rest/5.0
+name: Shop API
+meta:
+  id: wrk_631c4a72ad20435abbbb1644d4653057
+  created: 1755005245763
+  modified: 1755005245763
+  description: ""
+collection:
+  - name: Products
+    meta:
+      id: fld_492ee6f3b7294cafb6330a9ec9617abd
+      created: 1755005245765
+      modified: 1755005245765
+      sortKey: -1755005245765
+      description: ""
+    children:
+      - url: "{{ baseUrl }}/api/products"
+        name: List
+        meta:
+          id: req_02ce3cf4914443839d43e962d45a0c07
+          created: 1755005245766
+          modified: 1755005245766
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245766
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/products/5"
+        name: Get by id
+        meta:
+          id: req_a13defa23b7049cdbe5a596c295f1509
+          created: 1755005245767
+          modified: 1755005522037
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245767
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/products"
+        name: Create
+        meta:
+          id: req_d4f134e186984904917c1d6f0482c967
+          created: 1755005245767
+          modified: 1755005938901
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245767
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"name": "Phpne", "description": "Ergonomic", "price": 199.0, "category":
+            "eletronicos"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+            id: pair_0554338826504554b4992e1d41c44b82
+          - name: Authorization
+            value: Bearer {{ jwt }}
+            id: pair_7eabad32330f43caa0560e574129a275
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/products/1"
+        name: Update (id=1)
+        meta:
+          id: req_da5fcd39108d4f31a82d5164e42cc63f
+          created: 1755005245767
+          modified: 1755005245767
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245767
+        method: PUT
+        body:
+          mimeType: application/json
+          text: '{"name": "Mouse", "description": "Gaming", "price": 249.0, "category":
+            "eletronicos"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ jwt }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/products/1"
+        name: Delete (id=1)
+        meta:
+          id: req_bc728d4f200a4638aa3addd8fcd71bf4
+          created: 1755005245768
+          modified: 1755005245768
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245768
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {{ jwt }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl
+          }}/api/products/search?name=lap&category=eletronicos&minPrice=1000&ma\
+          xPrice=9000&page=0&size=20&sort=price,asc"
+        name: Search (filters+pagination)
+        meta:
+          id: req_e786296ae75a4fe09ab6f46ab226672e
+          created: 1755005245769
+          modified: 1755005245769
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245769
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/products"
+        name: List products (public)
+        meta:
+          id: req_5223d723b0a24def9770946cab7a05aa
+          created: 1755005245774
+          modified: 1755005245774
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245774
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Auth
+    meta:
+      id: fld_77c545313bb1448691eddbe9d1de67b0
+      created: 1755005245765
+      modified: 1755005245765
+      sortKey: -1755005245765
+      description: ""
+    children:
+      - url: "{{ baseUrl }}/api/auth/register"
+        name: Register
+        meta:
+          id: req_162d12ae55c8484fbbe2cf57be1ce2c0
+          created: 1755005245766
+          modified: 1755005245766
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245766
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"username": "poncho", "password": "StrongPass@123"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/auth/login"
+        name: Login (admin)
+        meta:
+          id: req_92ac1c80fa5f4417a3bac0bb3287edf8
+          created: 1755005245766
+          modified: 1755037403651
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245766
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"username": "admin", "password": "admin123"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/auth/login"
+        name: Login (client)
+        meta:
+          id: req_a5d7ac4fb8c14d44bad5a281969234e8
+          created: 1755005245773
+          modified: 1755037373903
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245773
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"username": "{{ clientUser }}", "password": "{{ clientPass }}"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Orders (Admin)
+    meta:
+      id: fld_9cd39330747b46fbb132aa36a15a8c1d
+      created: 1755005245765
+      modified: 1755005245765
+      sortKey: -1755005245765
+      description: ""
+    children:
+      - name: Payments
+        meta:
+          id: fld_6038b5d70c0a41f680436b88903903bf
+          created: 1755005245771
+          modified: 1755005245771
+          sortKey: -1755005245771
+          description: ""
+        children:
+          - url: "{{ baseUrl }}/api/orders/{{ orderId }}/payments"
+            name: Create payment (orderId={{ orderId }}) [client]
+            meta:
+              id: req_0091523ff8b847cca8e604e015d1c2d6
+              created: 1755005245772
+              modified: 1755005245772
+              isPrivate: false
+              description: ""
+              sortKey: -1755005245772
+            method: POST
+            body:
+              mimeType: application/json
+              text: '{"method": "{{ paymentMethod }}"}'
+            headers:
+              - name: Content-Type
+                value: application/json
+              - name: Authorization
+                value: Bearer {% response 'body', 'req_d1336495e7ae', 'json', 'token' %}
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+          - url: "{{ baseUrl }}/api/orders/{{ orderId }}/payments/{% response 'body',
+              'req_f69dfda4b0cc', 'raw' %}/approve"
+            name: Approve payment (orderId={{ orderId }}) [admin]
+            meta:
+              id: req_98337bc2d185407f9d0f31e97b26d2e3
+              created: 1755005245772
+              modified: 1755018230076
+              isPrivate: false
+              description: ""
+              sortKey: -1755005245772
+            method: POST
+            headers:
+              - name: Authorization
+                value: Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}
+                id: pair_192724920be2461b92a8c7c68cb2797f
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+      - url: "{{ baseUrl }}/api/orders"
+        name: Create
+        meta:
+          id: req_98d0f284397d47939370a29ecf627d9b
+          created: 1755005245768
+          modified: 1755005245768
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245768
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"items": [{"productId": 1, "quantity": 2}]}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ jwt }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/orders"
+        name: List
+        meta:
+          id: req_a4371c0e4261454cb615f6b01413ceb0
+          created: 1755005245769
+          modified: 1755005245769
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245769
+        method: GET
+        parameters:
+          - name: status
+            value: ""
+          - name: from
+            value: ""
+          - name: to
+            value: ""
+          - name: minTotal
+            value: ""
+          - name: maxTotal
+            value: ""
+          - name: page
+            value: "0"
+          - name: size
+            value: "20"
+          - name: sort
+            value: createdAt,desc
+        headers:
+          - name: Authorization
+            value: Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/orders/1"
+        name: Get by id
+        meta:
+          id: req_ba75d2921857481aaa11624a28c734bc
+          created: 1755005245769
+          modified: 1755005245769
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245769
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ jwt }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/orders/{{ orderId }}/status"
+        name: Update status (id=1 -> SHIPPED)
+        meta:
+          id: req_678d1ec9287642c894ca4859d21afbbf
+          created: 1755005245770
+          modified: 1755005245770
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245770
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: '{"status": "PAID"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl
+          }}/api/orders?status=PENDING&from=2025-08-01&to=2025-08-31&minTotal=1\
+          00&maxTotal=1000&page=0&size=20&sort=createdAt,desc"
+        name: List (with filters)
+        meta:
+          id: req_a8ff5f63f98342db9a15bc0089860683
+          created: 1755005245770
+          modified: 1755005245770
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245770
+        method: GET
+        headers:
+          - name: Authorization
+            value: Bearer {{ jwt }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/orders/1"
+        name: Update (id=1)
+        meta:
+          id: req_ad0107cf268d4cd9b91efe86b24c209c
+          created: 1755005245770
+          modified: 1755005245770
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245770
+        method: PUT
+        body:
+          mimeType: application/json
+          text: '{"items": [{"productId": 1, "quantity": 3}], "discount": 50.0,
+            "shippingFee": 20.0}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {{ jwt }}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/orders/1"
+        name: Delete (id=1) [ADMIN]
+        meta:
+          id: req_2f677517dcd4422b9d75035783067c4c
+          created: 1755005245771
+          modified: 1755005245771
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245771
+        method: DELETE
+        headers:
+          - name: Authorization
+            value: Bearer {% response 'body', 'req_e3f5f0477a3d', 'json', 'token' %}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Orders (Client)
+    meta:
+      id: fld_8845556707fb424293161293d7ac2f92
+      created: 1755005245773
+      modified: 1755005245773
+      sortKey: -1755005245773
+      description: ""
+    children:
+      - url: "{{ baseUrl }}/api/orders"
+        name: List orders [client]
+        meta:
+          id: req_77af2750338a43a59c004a1b9fd9f5f5
+          created: 1755005245773
+          modified: 1755005245773
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245773
+        method: GET
+        parameters:
+          - name: status
+            value: ""
+          - name: from
+            value: ""
+          - name: to
+            value: ""
+          - name: minTotal
+            value: ""
+          - name: maxTotal
+            value: ""
+          - name: page
+            value: "0"
+          - name: size
+            value: "20"
+          - name: sort
+            value: createdAt,desc
+        headers:
+          - name: Authorization
+            value: Bearer {% response 'body', 'req_d1336495e7ae', 'json', 'token' %}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ baseUrl }}/api/orders/{{ orderId }}"
+        name: Update order (id={{ orderId }}) [client]
+        meta:
+          id: req_567c39bee6bd41e69cfbad92d7162339
+          created: 1755005245774
+          modified: 1755005245774
+          isPrivate: false
+          description: ""
+          sortKey: -1755005245774
+        method: PUT
+        body:
+          mimeType: application/json
+          text: '{"items": [{"productId": "{{ productId1 }}", "quantity": 1},
+            {"productId": "{{ productId2 }}", "quantity": 2}], "discount": 0,
+            "shippingFee": 0}'
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Authorization
+            value: Bearer {% response 'body', 'req_d1336495e7ae', 'json', 'token' %}
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_e6de2fac86fd35dfa2832db9e24a85ef50ea0488
+    created: 1755005245776
+    modified: 1755005245776
+environments:
+  name: Base Environment
+  meta:
+    id: env_c3ba5006d5e94bc7a332266639cc9b4f
+    created: 1755005245764
+    modified: 1755005492872
+    isPrivate: false
+  data:
+    baseUrl: http://localhost:8080
+    jwt: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc1NTAwNTI2MSwiZXhwIjoxNzU1MDkxNjYxfQ.JePjW42JSzYpK0bzcZ-hBfvMFMrCtgYlNMaKlN81Tu8
+    adminUser: admin
+    adminPass: admin
+    clientUser: client
+    clientPass: client
+    orderId: 1
+    productId1: 1
+    productId2: 2
+    paymentMethod: CREDIT_CARD

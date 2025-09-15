@@ -21,7 +21,7 @@ public class DbSeeder {
             if (users.count() == 0) {
                 users.save(new User("admin", encoder.encode("admin123"), Role.ADMIN));
                 users.save(new User("operator", encoder.encode("operator123"), Role.OPERATOR));
-                users.save(new User("client", encoder.encode("client123"), Role.CLIENT));
+                users.save(new User("client", encoder.encode("client123"), Role.USER));
             }
             if (products.count() == 0) {
                 products.save(new Product("Notebook", "Inspiron 16GB", new BigDecimal("7999.90")));

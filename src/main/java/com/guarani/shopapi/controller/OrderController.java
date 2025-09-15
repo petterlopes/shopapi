@@ -80,27 +80,38 @@ public class OrderController {
     public ResponseEntity<?> update(@PathVariable("id") Long id,
                                     @Valid @RequestBody UpdateOrderRequest req,
                                     Authentication auth) {
-        Optional<Order> opt = orderRepo.findByIdWithAll(id);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
-        Order order = opt.get();
+        Optional<Order> orderOpt = orderRepo.findByIdWithAll(id);
+        if (orderOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Order order = orderOpt.get();
 
         String username = auth.getName();
-        String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("");
-        if (!order.getUser().getUsername().equals(username) && !role.contains("ADMIN") && !role.contains("OPERATOR")) {
+        boolean isAdminOrOperator = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().contains("ADMIN") || a.getAuthority().contains("OPERATOR"));
+
+        if (!order.getUser().getUsername().equals(username) && !isAdminOrOperator) {
             return ResponseEntity.status(403).build();
         }
 
         order.getItems().clear();
         if (req.getItems() != null) {
             for (UpdateOrderRequest.Item itemReq : req.getItems()) {
-                Product p = productRepo.findById(itemReq.getProductId()).orElse(null);
-                if (p == null) return ResponseEntity.badRequest().body("produto não encontrado: " + itemReq.getProductId());
-                OrderItem item = new OrderItem(order, p, itemReq.getQuantity(), p.getPrice());
+                Product product = productRepo.findById(itemReq.getProductId()).orElse(null);
+                if (product == null) {
+                    return ResponseEntity.badRequest().body("Produto não encontrado: " + itemReq.getProductId());
+                }
+                OrderItem item = new OrderItem(order, product, itemReq.getQuantity(), product.getPrice());
                 order.getItems().add(item);
             }
         }
-        if (req.getDiscount() != null) order.setDiscount(req.getDiscount());
-        if (req.getShippingFee() != null) order.setShippingFee(req.getShippingFee());
+
+        if (req.getDiscount() != null) {
+            order.setDiscount(req.getDiscount());
+        }
+        if (req.getShippingFee() != null) {
+            order.setShippingFee(req.getShippingFee());
+        }
 
         calculator.recalc(order);
         orderRepo.save(order);
@@ -108,19 +119,24 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable("id") Long id, @RequestBody OrderStatusUpdateRequest req) {
-        return orderRepo.findById(id).map(o -> {
-            o.setStatus(req.getStatus());
-            calculator.recalc(o);
-            orderRepo.save(o);
-            return ResponseEntity.ok().build();
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Void> updateStatus(@PathVariable("id") Long id, @RequestBody OrderStatusUpdateRequest request) {
+        Optional<Order> orderOpt = orderRepo.findById(id);
+        if (orderOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Order order = orderOpt.get();
+        order.setStatus(request.getStatus());
+        calculator.recalc(order);
+        orderRepo.save(order);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
-        if (!orderRepo.existsById(id)) return ResponseEntity.notFound().build();
+        if (!orderRepo.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
         orderRepo.deleteById(id);
         return ResponseEntity.noContent().build();
     }

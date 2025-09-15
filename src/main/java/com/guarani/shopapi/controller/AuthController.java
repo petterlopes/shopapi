@@ -1,52 +1,40 @@
 package com.guarani.shopapi.controller;
 
-import jakarta.validation.Valid;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.guarani.shopapi.dto.LoginRequest;
-import com.guarani.shopapi.dto.LoginResponse;
-import com.guarani.shopapi.dto.RegisterRequest;
-import com.guarani.shopapi.model.Role;
-import com.guarani.shopapi.model.User;
-import com.guarani.shopapi.repository.IUserRepository;
-import com.guarani.shopapi.security.JwtUtil;
+import com.guarani.shopapi.security.JwtService;
+
+record LoginRequest(String username, String password) {}
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authManager;
-    private final JwtUtil jwtUtil;
-    private final IUserRepository userRepo;
-    private final PasswordEncoder encoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public AuthController(AuthenticationManager am, JwtUtil jwtUtil, IUserRepository ur, PasswordEncoder enc) {
-        this.authManager = am;
-        this.jwtUtil = jwtUtil;
-        this.userRepo = ur;
-        this.encoder = enc;
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-        if (userRepo.existsByUsername(req.getUsername())) {
-            return ResponseEntity.badRequest().body("Usuário já existe");
-        }
-        User u = new User(req.getUsername(), encoder.encode(req.getPassword()), Role.CLIENT);
-        userRepo.save(u);
-        String token = jwtUtil.generateToken(u.getUsername(), u.getRole().name());
-        return ResponseEntity.ok(new LoginResponse(token, u.getRole().name()));
+    public AuthController(AuthenticationManager am, JwtService jwtService) {
+        this.authenticationManager = am;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
-        authManager.authenticate(new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
-        User u = userRepo.findByUsername(req.getUsername()).orElseThrow();
-        String token = jwtUtil.generateToken(u.getUsername(), u.getRole().name());
-        return ResponseEntity.ok(new LoginResponse(token, u.getRole().name()));
+    public ResponseEntity<Map<String,String>> login(@RequestBody LoginRequest req) {
+        Authentication auth = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(req.username(), req.password())
+        );
+        UserDetails user = (UserDetails) auth.getPrincipal();
+        String token = jwtService.generateToken(user);
+        return ResponseEntity.ok(Map.of("token", token));
     }
 }

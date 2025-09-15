@@ -3,6 +3,8 @@ com\guarani\shopapi\dto\CreateOrderRequest.class
 com\guarani\shopapi\dto\OrderSummaryDTO.class
 com\guarani\shopapi\model\OrderItem.class
 com\guarani\shopapi\config\SecurityConfig.class
+com\guarani\shopapi\init\AdminBootstrap.class
+com\guarani\shopapi\security\JwtService.class
 com\guarani\shopapi\controller\ProductSearchController.class
 com\guarani\shopapi\model\Order.class
 com\guarani\shopapi\security\CustomUserDetailsService.class
@@ -25,6 +27,7 @@ com\guarani\shopapi\controller\PaymentController.class
 com\guarani\shopapi\dto\OrderItemRequest.class
 com\guarani\shopapi\dto\OrderStatusUpdateRequest.class
 com\guarani\shopapi\dto\UpdateOrderRequest.class
+com\guarani\shopapi\config\CorsConfig.class
 com\guarani\shopapi\controller\OrderController.class
 com\guarani\shopapi\model\PaymentStatus.class
 com\guarani\shopapi\repository\IOrderRepository.class
@@ -32,9 +35,11 @@ com\guarani\shopapi\controller\AuthController.class
 com\guarani\shopapi\ShopApiApplication.class
 com\guarani\shopapi\model\User.class
 com\guarani\shopapi\model\Role.class
+com\guarani\shopapi\security\DbUserDetailsService.class
 com\guarani\shopapi\dto\LoginResponse.class
 com\guarani\shopapi\service\spec\OrderSpecifications.class
 com\guarani\shopapi\repository\IPaymentRepository.class
+com\guarani\shopapi\controller\LoginRequest.class
 com\guarani\shopapi\dto\UpdateOrderRequest$Item.class
 com\guarani\shopapi\security\JwtUtil.class
 com\guarani\shopapi\repository\IProductRepository.class
