@@ -1,26 +1,47 @@
-# Shop API (Spring Boot 3 · Java 17 · JWT · Postgres)
+# Shop API
 
-API para gestão de **produtos**, **pedidos** e **pagamentos**, com autenticação **JWT**, autorização por **roles**, documentação **OpenAPI** e execução local no Windows **sem Docker**.
+REST API para gestao de produtos, pedidos e pagamentos construida com Spring Boot 3.3, Java 17 e PostgreSQL. O projeto demonstra autenticacao stateless com JWT, autorizacao baseada em roles e filtros dinamicos com Spring Data Specifications.
 
-- **Stack**: Spring Boot 3.3.x, Spring Security 6, Spring Data JPA, PostgreSQL, Jackson, JJWT.
-- **Pacote raiz**: `com.guarani.shopapi`
-- **Porta padrão**: `8080`
+## Destaques
 
----
+- Autenticacao com JWT e filtro customizado (`JwtAuthenticationFilter`) que popula as roles extraidas do token.
+- Perfis `ADMIN`, `OPERATOR` e `USER` aplicados com `@PreAuthorize` e utilitarios em `SecurityExpressions`.
+- CRUD de produtos protegido por privilegios de staff e busca paginada por nome, categoria e faixa de preco (`/api/products/search`).
+- Pedidos com recalc de totais (`ServicoDeCalculoDePreco`), filtros por status/data/valor e aprovacao de pagamentos.
+- Seeds opcionais para usuarios e produtos via `DbSeeder` e bootstrap automatico de administrador (`AdminBootstrap`).
+- Documentacao OpenAPI via Springdoc e colecao do Insomnia versionada em `Insomnia/ShopAPI-insomnia.json`.
+
+## Stack principal
+
+- Java 17
+- Spring Boot 3.3.x (Web, Security, Data JPA, Validation)
+- PostgreSQL 13+
+- JJWT 0.11.5
+- Springdoc OpenAPI 2.5.0
+- Maven Wrapper (`mvnw`, `mvnw.cmd`)
+- Lombok (opcional para a IDE)
+
+## Estrutura e pacotes
+
+- Pacote raiz: `com.peritumct.shopapi`
+- Pastas relevantes:
+  - `controller` para endpoints REST
+  - `dto` para modelos de transferencia
+  - `model` para entidades JPA e enums (`Order`, `OrderItem`, `Payment`, `Role`, `OrderStatus`)
+  - `repository` com `JpaRepository` e consultas customizadas
+  - `security` para JWT, filtros, services e helpers
+  - `service` com regras de negocio e Specifications
+  - `init` para carga inicial de dados
 
 ## Requisitos
 
-- **JDK 17**
-- **PostgreSQL 13+** rodando localmente
-- **Maven Wrapper** (já incluso: `mvnw`, `mvnw.cmd`, `.mvn/`)
+- JDK 17
+- PostgreSQL 13 ou superior rodando localmente
+- Maven Wrapper (incluido)
 
-> Mantenha o **wrapper** versionado para builds reprodutíveis em qualquer máquina.
+## Banco de dados
 
----
-
-## Configuração do Banco (Postgres)
-
-Crie um banco de dados e um usuário (exemplo):
+Crie o banco e usuario padrao:
 
 ```sql
 CREATE DATABASE shopdb;
@@ -28,236 +49,127 @@ CREATE USER shop WITH ENCRYPTED PASSWORD 'shop';
 GRANT ALL PRIVILEGES ON DATABASE shopdb TO shop;
 ```
 
----
+## Configuracao de perfis
 
-## Perfis e propriedades
+Use o perfil `local` para desenvolvimento. Copie `src/main/resources/application-local.properties` (nao versionado em ambiente publico) e ajuste conforme necessario:
 
-O projeto utiliza **perfis** do Spring. Para desenvolvimento local use o perfil **`local`**.
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/shopdb
+spring.datasource.username=shop
+spring.datasource.password=shop
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.open-in-view=false
+spring.jpa.show-sql=true
 
-Crie o arquivo `src/main/resources/application-local.yml` (ou `.properties`) com suas credenciais:
+app.jwt.secret=<chave-base64-256bits>
+app.jwt.exp-minutes=1440
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/shopdb
-    username: shop
-    password: shop
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update   # dev: update | prod: validate
-  jackson:
-    serialization:
-      WRITE_DATES_AS_TIMESTAMPS: false
-
-# JWT (altere esse segredo para algo forte em prod)
-app:
-  jwt:
-    secret: change-me-super-secret-256
-    expiration: 3600000    # 1h em milissegundos
+springdoc.swagger-ui.path=/swagger-ui.html
 ```
 
-> Caso já exista `application.yml`, apenas garanta que o **profile** correto será ativado ao executar.
+> Gere uma chave forte para `app.jwt.secret`, por exemplo `openssl rand -base64 32`. O valor deve ser Base64 de pelo menos 256 bits.
 
----
-
-## Como executar (Windows, sem Docker)
-
-### Pela linha de comando
+## Execucao local
 
 ```powershell
-# compilar e empacotar (sem executar testes)
+# instalar dependencias e compilar
 .\mvnw.cmd clean package -DskipTests
 
-# executar com o perfil local (PostgreSQL)
+# executar em modo dev
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
+
+# ou via jar
 java -jar target\shopapi-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
 ```
 
-### Pelo VS Code (debug)
+## Usuarios seeds
 
-1. Instale o **Extension Pack for Java**.  
-2. Abra a classe `ShopApiApplication`.  
-3. Clique em **Run** / **Debug**.  
-4. Adicione nos argumentos: `--spring.profiles.active=local`.
+| usuario  | senha       | role     | origem             |
+|----------|-------------|----------|--------------------|
+| admin    | admin123    | ADMIN    | AdminBootstrap / DbSeeder |
+| operator | operator123 | OPERATOR | DbSeeder           |
+| client   | client123   | USER     | DbSeeder           |
 
----
+As seeds sao criadas somente quando nao ha registros nas tabelas.
 
-## Usuários e perfis (roles)
+## Autenticacao JWT
 
-Para desenvolvimento você pode manter usuários seedados (exemplo):
-
-- **admin / admin** → `ROLE_ADMIN`
-- **client / client** → `ROLE_USER`
-
-> Ajuste o carregamento de usuários conforme sua implementação (ex.: `data.sql` ou `CommandLineRunner`).
-
-**Autorização por role** (exemplos):
-
-- `ROLE_ADMIN` / `ROLE_OPERATOR`: CRUD de produtos; aprovar pagamentos.
-- `ROLE_USER`: operações do cliente (criar pagamento do próprio pedido, listar seus pedidos etc.).
-
----
-
-## Autenticação (JWT)
-
-### Login
-`POST /api/auth/login`
-
-```json
-{
-  "username": "admin",
-  "password": "admin"
-}
-```
-
-**Resposta (exemplo):**
-```json
-{ "token": "<JWT>" }
-```
-
-Envie o token nas chamadas protegidas:
-
-```
-Authorization: Bearer <JWT>
-```
-
-> No parse do token, garanta que as **authorities** tenham o prefixo `ROLE_` (ex.: `ROLE_ADMIN`) para que `@PreAuthorize("hasRole('ADMIN')")` funcione.
-
----
+1. `POST /api/auth/login`
+   ```json
+   {
+     "username": "admin",
+     "password": "admin123"
+   }
+   ```
+2. Resposta:
+   ```json
+   { "token": "<jwt>" }
+   ```
+3. Envie `Authorization: Bearer <jwt>` nas requisicoes protegidas.
+4. As roles sao adicionadas ao token e remontadas pelo `JwtAuthenticationFilter`. Garante prefixo `ROLE_` para funcionar com `@PreAuthorize`.
 
 ## Endpoints principais
 
-### Produtos
+**Produtos**
+- `GET /api/products` � lista todos os produtos (qualquer usuario autenticado).
+- `GET /api/products/{id}` � consulta por id.
+- `POST /api/products` � cria produto (`ADMIN` ou `OPERATOR`).
+- `PUT /api/products/{id}` � atualiza produto (`ADMIN` ou `OPERATOR`).
+- `DELETE /api/products/{id}` � remove produto (`ADMIN` ou `OPERATOR`).
+- `GET /api/products/search` � busca paginada com filtros `name`, `category`, `minPrice`, `maxPrice`.
 
-- `GET /api/products` — público
-- `GET /api/products/search` — público; filtros: `name`, `category`, `minPrice`, `maxPrice`, `page`, `size`, `sort`
-- `POST /api/products` — **ADMIN/OPERATOR**
-- `PUT /api/products/{id}` — **ADMIN/OPERATOR**
-- `DELETE /api/products/{id}` — **ADMIN/OPERATOR**
+**Pedidos**
+- `GET /api/orders` � paginado; aceita filtros `status`, `from`, `to`, `minTotal`, `maxTotal`.
+- `GET /api/orders/{id}` � retorna `OrderDetailDTO` com itens; acesso restrito ao dono ou staff via `SecurityExpressions`.
+- `PUT /api/orders/{id}` � atualiza itens, desconto e frete; recalcula totais; autorizado para dono ou staff.
+- `PATCH /api/orders/{id}/status` � atualiza status (atualiza totais apos a mudanca).
+- `DELETE /api/orders/{id}` � remove pedido (`ADMIN`).
 
-**Modelo (exemplo):**
-```json
-{
-  "name": "Notebook Pro 14",
-  "description": "i7/16GB/512GB",
-  "category": "eletronicos",
-  "price": 7999.90
-}
-```
+**Pagamentos**
+- `POST /api/orders/{orderId}/payments` � cria pagamento do pedido (dono ou staff).
+- `POST /api/orders/{orderId}/payments/{paymentId}/approve` � aprova pagamento e coloca o pedido em `PAID` (`ADMIN` ou `OPERATOR`).
 
-### Pedidos
+## Regras de negocio
 
-- `GET /api/orders` — **ADMIN** (todos) | **USER** (próprios), com filtros `status`, `from`, `to`, `minTotal`, `maxTotal`, além de paginação/sort.
-- `GET /api/orders/{id}` — dono (USER) ou ADMIN
-- `PUT /api/orders/{id}` — dono (USER): atualiza itens/valores (o serviço **recalcula** subtotal/total)
-- `PATCH /api/orders/{id}/status` — **ADMIN**
-- `DELETE /api/orders/{id}` — **ADMIN**
+- Recalculo automatico de subtotal, desconto, frete e total com limite minimo zero.
+- Validacao de produtos ao atualizar itens de pedido.
+- Especificacoes JPA reutilizaveis para filtros de pedidos e produtos.
+- Atualizacao de status do pedido ao aprovar pagamentos.
+- Helpers de seguranca (`SecurityUtils`, `SecurityExpressions`) para validar roles e propriedade do recurso.
 
-### Pagamentos
+## Documentacao da API
 
-- `POST /api/orders/{orderId}/payments` — **USER** (cria pagamento do próprio pedido)  
-  Body:
-  ```json
-  { "method": "CREDIT_CARD" }   // ou PIX, etc.
-  ```
-- `POST /api/orders/{orderId}/payments/{paymentId}/approve` — **ADMIN/OPERATOR**  
-  Ao aprovar, o pedido passa para `PAID` (conforme regra de negócios).
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
----
+## Colecao Insomnia
 
-## Regras de negócio (implementadas)
+Importe `Insomnia/ShopAPI-insomnia.json`. A colecao inclui:
+- Requests para login e renovacao de token.
+- Exemplos de chamadas separadas por role.
+- Variavel que injeta o token de login automaticamente.
 
-- **Recalcular totais** do pedido sempre que itens/valores mudarem.
-- **Total ≥ 0** (desconto não pode exceder o subtotal).
-- **Filtro de pedidos** por `status`, intervalo de datas (`from/to`) e faixa de total (`minTotal/maxTotal`) com paginação/sort.
-- **Pagamentos**: cliente cria; **admin/operator** aprova; pedido muda para `PAID`.
-- **Autorização por role** com `@PreAuthorize`.
+## Comandos uteis
 
-> Se houver regras adicionais no documento de requisitos, me avise que eu descrevo e ligo aos endpoints/serviços.
+- `.\mvnw.cmd test` � roda testes (quando existirem).
+- `.\mvnw.cmd dependency:tree` � inspeciona arvore de dependencias.
+- `mvn clean` � remove artefatos de build (executar antes de versionar).
 
----
-
-## Documentação da API
-
-- **Swagger UI**: `http://localhost:8080/swagger-ui/index.html`  
-- **OpenAPI (JSON)**: `http://localhost:8080/v3/api-docs`
-
----
-
-## Coleção do Insomnia
-
-Coleção pronta para importação (com variáveis e encadeamento de token):
-
-- **ShopAPI-insomnia.json** — contém login de **admin** e **client**, rotas protegidas separadas por perfil, exemplos de corpo e variáveis.
-  - Faça login primeiro para popular o token.
-
-**Dicas Insomnia:**
-- No header, use o tag **Response → Body Attribute** para puxar `token` da resposta do login — evite o modo “External Vault”.
-- Exemplo de header:
-  ```
-  Authorization: Bearer {% response 'body', '<ID_DO_REQUEST_DE_LOGIN>', 'json', 'token' %}
-  ```
-
----
-
-## Estrutura de pastas (resumo)
+## Estrutura resumida
 
 ```
 src/
   main/
-    java/com/guarani/shopapi/...
+    java/com/peritumct/shopapi/...
     resources/
-      application.yml
-      application-local.yml      # (não versionar em repositório público)
-.mvn/wrapper/                    # Maven Wrapper (versione tudo)
-mvnw / mvnw.cmd
+      application.properties
+      application-local.properties (perfil dev)
+Insomnia/
+  ShopAPI-insomnia.json
 pom.xml
+README.md
 ```
 
----
+## Licenca
 
-## Limpeza para versionamento
-
-```bash
-mvn clean
-```
-
-`.gitignore` sugerido (trecho):
-```
-target/
-*.log
-.idea/ *.iml
-.vscode/
-.DS_Store
-Thumbs.db
-.env*
-src/main/resources/application-local.*
-```
-
-`.gitattributes` sugerido:
-```
-* text=auto
-*.sh  text eol=lf
-mvnw  text eol=lf
-*.cmd text eol=crlf
-*.bat text eol=crlf
-*.ps1 text eol=crlf
-```
-
----
-
-## Build para produção
-
-```bash
-# gera o fat-jar
-mvn clean package
-
-# executar (ajuste as variáveis/props de prod)
-java -jar target/shopapi-0.0.1-SNAPSHOT.jar   --spring.profiles.active=prod   --app.jwt.secret=<seu-secret>   --spring.datasource.url=jdbc:postgresql://<host>:5432/<db>   --spring.datasource.username=<user>   --spring.datasource.password=<pass>
-```
-
----
-
-## Licença
-
-Uso livre para fins de estudo e avaliação.
+Uso livre para fins de estudo e avaliacao.
