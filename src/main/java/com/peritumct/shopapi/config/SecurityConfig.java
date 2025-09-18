@@ -20,6 +20,14 @@ import com.peritumct.shopapi.security.JwtAuthenticationFilter;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private static final String[] SWAGGER_WHITELIST = {
+        "/swagger-ui.html",
+        "/swagger-ui/**",
+        "/v3/api-docs",
+        "/v3/api-docs/**",
+        "/v3/api-docs.yaml"
+    };
+
     private final JwtAuthenticationFilter jwtFilter;
     private final UserDetailsService userDetailsService;
 
@@ -50,12 +58,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
         .csrf(csrf -> csrf.disable())
-        .cors(cors -> {}) // usa o bean acima
+        .cors(cors -> {})
         .authorizeHttpRequests(auth -> auth
-            // Libera preflight de CORS
             .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-            // Libera autenticação
             .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers(SWAGGER_WHITELIST).permitAll()
             .anyRequest().authenticated()
         )
         .authenticationProvider(authenticationProvider())
