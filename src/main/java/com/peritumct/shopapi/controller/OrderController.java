@@ -1,143 +1,74 @@
 package com.peritumct.shopapi.controller;
 
-import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import com.peritumct.shopapi.dto.*;
-import com.peritumct.shopapi.model.*;
-import com.peritumct.shopapi.repository.IOrderRepository;
-import com.peritumct.shopapi.repository.IProductRepository;
-import com.peritumct.shopapi.repository.IUserRepository;
-import com.peritumct.shopapi.service.ServicoDeCalculoDePreco;
-import com.peritumct.shopapi.service.spec.OrderSpecifications;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;
+
+import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.peritumct.shopapi.dto.OrderStatusUpdateRequest;
+import com.peritumct.shopapi.dto.OrderSummaryDTO;
+import com.peritumct.shopapi.dto.UpdateOrderRequest;
+import com.peritumct.shopapi.model.OrderStatus;
+import com.peritumct.shopapi.service.usecase.OrderUseCase;
 
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
-    private final IOrderRepository orderRepo;
-    private final IProductRepository productRepo;
-    private final IUserRepository userRepo;
-    private final ServicoDeCalculoDePreco calculator;
+    private final OrderUseCase orderUseCase;
 
-    public OrderController(IOrderRepository orderRepo, IProductRepository productRepo, IUserRepository userRepo, ServicoDeCalculoDePreco calculator) {
-        this.orderRepo = orderRepo;
-        this.productRepo = productRepo;
-        this.userRepo = userRepo;
-        this.calculator = calculator;
+    public OrderController(OrderUseCase orderUseCase) {
+        this.orderUseCase = orderUseCase;
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable("id") Long id) {
-        return orderRepo.findByIdWithAll(id).map(o -> {
-            List<OrderItemDTO> items = o.getItems().stream().map(it ->
-                new OrderItemDTO(
-                    it.getProduct().getId(),
-                    it.getProduct().getName(),
-                    it.getUnitPrice(),
-                    it.getQuantity(),
-                    it.getUnitPrice().multiply(BigDecimal.valueOf(it.getQuantity()))
-                )
-            ).toList();
-            OrderDetailDTO dto = new OrderDetailDTO(
-                o.getId(), o.getCreatedAt(), o.getStatus(),
-                o.getSubtotal(), o.getDiscount(), o.getShippingFee(),
-                o.getTotal(), o.getUser().getUsername(), items
-            );
-            return ResponseEntity.ok(dto);
-        }).orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(orderUseCase.loadOrderDetail(id));
     }
 
     @GetMapping
-    public Page<OrderSummaryDTO> list(@RequestParam(value="status", required = false) OrderStatus status,
-                                      @RequestParam(value="from", required = false) LocalDate from,
-                                      @RequestParam(value="to", required = false) LocalDate to,
-                                      @RequestParam(value="minTotal", required = false) BigDecimal minTotal,
-                                      @RequestParam(value="maxTotal", required = false) BigDecimal maxTotal,
+    public Page<OrderSummaryDTO> list(@RequestParam(value = "status", required = false) OrderStatus status,
+                                      @RequestParam(value = "from", required = false) LocalDate from,
+                                      @RequestParam(value = "to", required = false) LocalDate to,
+                                      @RequestParam(value = "minTotal", required = false) BigDecimal minTotal,
+                                      @RequestParam(value = "maxTotal", required = false) BigDecimal maxTotal,
                                       Pageable pageable) {
-        LocalDateTime fromDt = (from != null) ? from.atStartOfDay() : null;
-        LocalDateTime toDt = (to != null) ? to.atTime(LocalTime.MAX) : null;
-        Specification<Order> spec = OrderSpecifications.filter(status, fromDt, toDt, minTotal, maxTotal);
-        Page<Order> page = orderRepo.findAll(spec, pageable);
-        return page.map(o -> new OrderSummaryDTO(
-            o.getId(), o.getCreatedAt(), o.getStatus(), o.getTotal()
-        ));
+        return orderUseCase.searchOrders(status, from, to, minTotal, maxTotal, pageable);
     }
 
     @PreAuthorize("@securityExpressions.canManageOrder(authentication, #id)")
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable("id") Long id,
                                     @Valid @RequestBody UpdateOrderRequest req) {
-        Optional<Order> orderOpt = orderRepo.findByIdWithAll(id);
-        if (orderOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Order order = orderOpt.get();
-
-        order.getItems().clear();
-        if (req.getItems() != null) {
-            for (UpdateOrderRequest.Item itemReq : req.getItems()) {
-                Product product = productRepo.findById(itemReq.getProductId()).orElse(null);
-                if (product == null) {
-                    return ResponseEntity.badRequest().body("Produto não encontrado: " + itemReq.getProductId());
-                }
-                OrderItem item = new OrderItem(order, product, itemReq.getQuantity(), product.getPrice());
-                order.getItems().add(item);
-            }
-        }
-
-        if (req.getDiscount() != null) {
-            order.setDiscount(req.getDiscount());
-        }
-        if (req.getShippingFee() != null) {
-            order.setShippingFee(req.getShippingFee());
-        }
-
-        calculator.recalc(order);
-        orderRepo.save(order);
+        orderUseCase.updateOrder(id, req);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Void> updateStatus(@PathVariable("id") Long id, @RequestBody OrderStatusUpdateRequest request) {
-        Optional<Order> orderOpt = orderRepo.findById(id);
-        if (orderOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Order order = orderOpt.get();
-        order.setStatus(request.getStatus());
-        calculator.recalc(order);
-        orderRepo.save(order);
+    public ResponseEntity<Void> updateStatus(@PathVariable("id") Long id,
+                                             @RequestBody OrderStatusUpdateRequest request) {
+        orderUseCase.updateStatus(id, request);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("@securityExpressions.isAdmin(authentication)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
-        if (!orderRepo.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        orderRepo.deleteById(id);
+        orderUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
-
-
-
-
-
-
-
-
