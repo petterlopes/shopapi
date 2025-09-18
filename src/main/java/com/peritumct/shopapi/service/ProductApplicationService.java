@@ -1,26 +1,23 @@
 package com.peritumct.shopapi.service;
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import com.peritumct.shopapi.domain.product.Product;
+import com.peritumct.shopapi.domain.product.port.ProductRepository;
+import com.peritumct.shopapi.domain.shared.PageRequest;
+import com.peritumct.shopapi.domain.shared.PageResult;
+import com.peritumct.shopapi.service.exception.ResourceNotFoundException;
+import com.peritumct.shopapi.service.usecase.ProductUseCase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.peritumct.shopapi.model.Product;
-import com.peritumct.shopapi.repository.IProductRepository;
-import com.peritumct.shopapi.service.exception.ResourceNotFoundException;
-import com.peritumct.shopapi.service.spec.ProductSpecifications;
-import com.peritumct.shopapi.service.usecase.ProductUseCase;
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class ProductApplicationService implements ProductUseCase {
 
-    private final IProductRepository productRepository;
+    private final ProductRepository productRepository;
 
-    public ProductApplicationService(IProductRepository productRepository) {
+    public ProductApplicationService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
@@ -48,10 +45,8 @@ public class ProductApplicationService implements ProductUseCase {
     public Product updateProduct(Long id, Product product) {
         Product existing = productRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado: " + id));
-        existing.setName(product.getName());
-        existing.setDescription(product.getDescription());
-        existing.setPrice(product.getPrice());
-        return productRepository.save(existing);
+        Product updated = new Product(existing.getId(), product.getName(), product.getDescription(), product.getCategory(), product.getPrice());
+        return productRepository.save(updated);
     }
 
     @Override
@@ -65,12 +60,11 @@ public class ProductApplicationService implements ProductUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> searchProducts(String name,
-                                        String category,
-                                        BigDecimal minPrice,
-                                        BigDecimal maxPrice,
-                                        Pageable pageable) {
-        Specification<Product> spec = ProductSpecifications.filter(name, category, minPrice, maxPrice);
-        return productRepository.findAll(spec, pageable);
+    public PageResult<Product> searchProducts(String name,
+                                              String category,
+                                              BigDecimal minPrice,
+                                              BigDecimal maxPrice,
+                                              PageRequest pageRequest) {
+        return productRepository.search(name, category, minPrice, maxPrice, pageRequest);
     }
 }

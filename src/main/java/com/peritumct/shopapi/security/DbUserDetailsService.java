@@ -1,39 +1,39 @@
 package com.peritumct.shopapi.security;
 
-import java.util.List;
-
+import com.peritumct.shopapi.domain.user.Role;
+import com.peritumct.shopapi.domain.user.User;
+import com.peritumct.shopapi.domain.user.port.UserRepository;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
-import com.peritumct.shopapi.model.Role;
-import com.peritumct.shopapi.repository.IUserRepository;
+import java.util.List;
 
 @Service
 @Primary
 public class DbUserDetailsService implements UserDetailsService {
 
-    private final IUserRepository repo; 
+    private final UserRepository userRepository;
 
-    public DbUserDetailsService(IUserRepository repo) { 
-        this.repo = repo;
+    public DbUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override
-    public org.springframework.security.core.userdetails.UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("usuario nao encontrado: " + username));
 
-        var u = repo.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("usuário não encontrado: " + username));
-
-        // Enum -> ROLE_...
-        Role role = u.getRole() == null ? Role.USER : u.getRole();
+        Role role = user.getRole() == null ? Role.USER : user.getRole();
         String authority = "ROLE_" + role.name();
 
-        return new User(u.getUsername(), u.getPassword(),
-                List.of(new SimpleGrantedAuthority(authority)));
+        return new org.springframework.security.core.userdetails.User(
+            user.getUsername(),
+            user.getPassword(),
+            List.of(new SimpleGrantedAuthority(authority))
+        );
     }
 }

@@ -1,12 +1,11 @@
 package com.peritumct.shopapi.service.usecase;
 
+import com.peritumct.shopapi.domain.product.Product;
+import com.peritumct.shopapi.domain.shared.PageRequest;
+import com.peritumct.shopapi.domain.shared.PageResult;
+
 import java.math.BigDecimal;
 import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import com.peritumct.shopapi.model.Product;
 
 public interface ProductUseCase {
 
@@ -20,9 +19,9 @@ public interface ProductUseCase {
 
     void deleteProduct(Long id);
 
-    Page<Product> searchProducts(String name,
-                                 String category,
-                                 BigDecimal minPrice,
-                                 BigDecimal maxPrice,
-                                 Pageable pageable);
+    PageResult<Product> searchProducts(String name,
+                                       String category,
+                                       BigDecimal minPrice,
+                                       BigDecimal maxPrice,
+                                       PageRequest pageRequest);
 }

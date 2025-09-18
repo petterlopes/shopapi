@@ -1,18 +1,17 @@
 package com.peritumct.shopapi.security;
 
+import com.peritumct.shopapi.domain.order.Order;
+import com.peritumct.shopapi.domain.order.port.OrderRepository;
+import com.peritumct.shopapi.domain.user.Role;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
-import com.peritumct.shopapi.model.Order;
-import com.peritumct.shopapi.model.Role;
-import com.peritumct.shopapi.repository.IOrderRepository;
 
 @Component("securityExpressions")
 public class SecurityExpressions {
 
-    private final IOrderRepository orderRepository;
+    private final OrderRepository orderRepository;
 
-    public SecurityExpressions(IOrderRepository orderRepository) {
+    public SecurityExpressions(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
     }
 
@@ -32,9 +31,9 @@ public class SecurityExpressions {
         if (orderId == null) {
             return false;
         }
-        return orderRepository.findByIdWithUser(orderId)
-                .map(order -> canManageOrder(authentication, order))
-                .orElse(true);
+        return orderRepository.findWithUser(orderId)
+            .map(order -> canManageOrder(authentication, order))
+            .orElse(true);
     }
 
     public boolean canManageOrder(Authentication authentication, Order order) {

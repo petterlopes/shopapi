@@ -1,6 +1,6 @@
 package com.peritumct.shopapi.dto;
 
-import com.peritumct.shopapi.model.OrderStatus;
+import com.peritumct.shopapi.domain.order.OrderStatus;
 
 public class OrderStatusUpdateRequest {
     private OrderStatus status;

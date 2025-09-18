@@ -3,7 +3,7 @@ package com.peritumct.shopapi.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.peritumct.shopapi.model.OrderStatus;
+import com.peritumct.shopapi.domain.order.OrderStatus;
 
 public class OrderSummaryDTO {
     private Long id;

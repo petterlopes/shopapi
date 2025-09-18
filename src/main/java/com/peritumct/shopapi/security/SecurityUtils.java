@@ -4,7 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 
-import com.peritumct.shopapi.model.Role;
+import com.peritumct.shopapi.domain.user.Role;
 
 import java.util.Collection;
 import java.util.Objects;

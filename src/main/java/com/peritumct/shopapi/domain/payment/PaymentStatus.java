@@ -1,4 +1,4 @@
-package com.peritumct.shopapi.model;
+package com.peritumct.shopapi.domain.payment;
 
 public enum PaymentStatus {
     PENDING,

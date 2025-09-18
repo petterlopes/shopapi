@@ -1,32 +1,32 @@
 package com.peritumct.shopapi.service;
 
-import java.math.BigDecimal;
+import com.peritumct.shopapi.domain.product.Product;
+import com.peritumct.shopapi.domain.product.port.ProductRepository;
+import com.peritumct.shopapi.domain.user.Role;
+import com.peritumct.shopapi.domain.user.User;
+import com.peritumct.shopapi.domain.user.port.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.peritumct.shopapi.model.Product;
-import com.peritumct.shopapi.model.Role;
-import com.peritumct.shopapi.model.User;
-import com.peritumct.shopapi.repository.IProductRepository;
-import com.peritumct.shopapi.repository.IUserRepository;
+import java.math.BigDecimal;
 
 @Configuration
 public class DbSeeder {
 
     @Bean
-    CommandLineRunner seed(IUserRepository users, IProductRepository products, PasswordEncoder encoder) {
+    CommandLineRunner seed(UserRepository users, ProductRepository products, PasswordEncoder encoder) {
         return args -> {
-            if (users.count() == 0) {
-                users.save(new User("admin", encoder.encode("admin123"), Role.ADMIN));
-                users.save(new User("operator", encoder.encode("operator123"), Role.OPERATOR));
-                users.save(new User("client", encoder.encode("client123"), Role.USER));
+            if (users.findByUsername("admin").isEmpty()) {
+                users.save(new User(null, "admin", encoder.encode("admin123"), Role.ADMIN));
+                users.save(new User(null, "operator", encoder.encode("operator123"), Role.OPERATOR));
+                users.save(new User(null, "client", encoder.encode("client123"), Role.USER));
             }
-            if (products.count() == 0) {
-                products.save(new Product("Notebook", "Inspiron 16GB", new BigDecimal("7999.90")));
-                products.save(new Product("Mouse", "Sem fio", new BigDecimal("199.00")));
-                products.save(new Product("Teclado", "Mecânico", new BigDecimal("499.00")));
+            if (products.findAll().isEmpty()) {
+                products.save(new Product(null, "Notebook", "Inspiron 16GB", null, new BigDecimal("7999.90")));
+                products.save(new Product(null, "Mouse", "Sem fio", null, new BigDecimal("199.00")));
+                products.save(new Product(null, "Teclado", "Mecanico", null, new BigDecimal("499.00")));
             }
         };
     }

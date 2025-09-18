@@ -1,6 +1,6 @@
 package com.peritumct.shopapi.dto;
 
-import com.peritumct.shopapi.model.PaymentMethod;
+import com.peritumct.shopapi.domain.payment.PaymentMethod;
 
 import jakarta.validation.constraints.NotNull;
 

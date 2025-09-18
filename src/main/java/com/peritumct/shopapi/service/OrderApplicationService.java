@@ -1,42 +1,33 @@
 package com.peritumct.shopapi.service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import com.peritumct.shopapi.domain.order.Order;
+import com.peritumct.shopapi.domain.order.OrderSearchFilters;
+import com.peritumct.shopapi.domain.order.OrderStatus;
+import com.peritumct.shopapi.domain.order.OrderUpdateCommand;
+import com.peritumct.shopapi.domain.order.OrderUpdateItem;
+import com.peritumct.shopapi.domain.order.port.OrderRepository;
+import com.peritumct.shopapi.domain.order.service.PriceCalculator;
+import com.peritumct.shopapi.domain.product.Product;
+import com.peritumct.shopapi.domain.product.port.ProductRepository;
+import com.peritumct.shopapi.domain.shared.PageRequest;
+import com.peritumct.shopapi.domain.shared.PageResult;
+import com.peritumct.shopapi.service.exception.ResourceNotFoundException;
+import com.peritumct.shopapi.service.usecase.OrderUseCase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.peritumct.shopapi.dto.OrderDetailDTO;
-import com.peritumct.shopapi.dto.OrderItemDTO;
-import com.peritumct.shopapi.dto.OrderStatusUpdateRequest;
-import com.peritumct.shopapi.dto.OrderSummaryDTO;
-import com.peritumct.shopapi.dto.UpdateOrderRequest;
-import com.peritumct.shopapi.model.Order;
-import com.peritumct.shopapi.model.OrderItem;
-import com.peritumct.shopapi.model.OrderStatus;
-import com.peritumct.shopapi.model.Product;
-import com.peritumct.shopapi.repository.IOrderRepository;
-import com.peritumct.shopapi.repository.IProductRepository;
-import com.peritumct.shopapi.service.exception.ResourceNotFoundException;
-import com.peritumct.shopapi.service.spec.OrderSpecifications;
-import com.peritumct.shopapi.service.usecase.OrderUseCase;
+import java.util.List;
 
 @Service
 public class OrderApplicationService implements OrderUseCase {
 
-    private final IOrderRepository orderRepository;
-    private final IProductRepository productRepository;
-    private final ServicoDeCalculoDePreco calculator;
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+    private final PriceCalculator calculator;
 
-    public OrderApplicationService(IOrderRepository orderRepository,
-                                   IProductRepository productRepository,
-                                   ServicoDeCalculoDePreco calculator) {
+    public OrderApplicationService(OrderRepository orderRepository,
+                                   ProductRepository productRepository,
+                                   PriceCalculator calculator) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.calculator = calculator;
@@ -44,63 +35,43 @@ public class OrderApplicationService implements OrderUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public OrderDetailDTO loadOrderDetail(Long id) {
-        Order order = orderRepository.findByIdWithAll(id)
+    public Order loadOrder(Long id) {
+        return orderRepository.findDetailedById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Pedido nao encontrado: " + id));
-        return new OrderDetailDTO(
-            order.getId(),
-            order.getCreatedAt(),
-            order.getStatus(),
-            order.getSubtotal(),
-            order.getDiscount(),
-            order.getShippingFee(),
-            order.getTotal(),
-            order.getUser().getUsername(),
-            toOrderItemDtos(order.getItems())
-        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderSummaryDTO> searchOrders(OrderStatus status,
-                                              LocalDate from,
-                                              LocalDate to,
-                                              BigDecimal minTotal,
-                                              BigDecimal maxTotal,
-                                              Pageable pageable) {
-        LocalDateTime fromDt = from != null ? from.atStartOfDay() : null;
-        LocalDateTime toDt = to != null ? to.atTime(LocalTime.MAX) : null;
-        Specification<Order> spec = OrderSpecifications.filter(status, fromDt, toDt, minTotal, maxTotal);
-        return orderRepository.findAll(spec, pageable)
-            .map(order -> new OrderSummaryDTO(order.getId(), order.getCreatedAt(), order.getStatus(), order.getTotal()));
+    public PageResult<Order> searchOrders(OrderSearchFilters filters, PageRequest pageRequest) {
+        return orderRepository.search(filters, pageRequest);
     }
 
     @Override
     @Transactional
-    public void updateOrder(Long id, UpdateOrderRequest request) {
-        Order order = orderRepository.findByIdWithAll(id)
+    public void updateOrder(Long id, OrderUpdateCommand command) {
+        Order order = orderRepository.findDetailedById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Pedido nao encontrado: " + id));
 
-        rebuildOrderItems(order, request);
+        rebuildOrderItems(order, command.items());
 
-        if (request.getDiscount() != null) {
-            order.setDiscount(request.getDiscount());
+        if (command.discount() != null) {
+            order.setDiscount(command.discount());
         }
-        if (request.getShippingFee() != null) {
-            order.setShippingFee(request.getShippingFee());
+        if (command.shippingFee() != null) {
+            order.setShippingFee(command.shippingFee());
         }
 
-        calculator.recalc(order);
+        calculator.recalculate(order);
         orderRepository.save(order);
     }
 
     @Override
     @Transactional
-    public void updateStatus(Long id, OrderStatusUpdateRequest request) {
+    public void updateStatus(Long id, OrderStatus status) {
         Order order = orderRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Pedido nao encontrado: " + id));
-        order.setStatus(request.getStatus());
-        calculator.recalc(order);
+        order.setStatus(status);
+        calculator.recalculate(order);
         orderRepository.save(order);
     }
 
@@ -113,29 +84,16 @@ public class OrderApplicationService implements OrderUseCase {
         orderRepository.deleteById(id);
     }
 
-    private List<OrderItemDTO> toOrderItemDtos(List<OrderItem> items) {
-        return items.stream()
-            .map(item -> new OrderItemDTO(
-                item.getProduct().getId(),
-                item.getProduct().getName(),
-                item.getUnitPrice(),
-                item.getQuantity(),
-                item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
-            ))
-            .toList();
-    }
-
-    private void rebuildOrderItems(Order order, UpdateOrderRequest request) {
-        order.getItems().clear();
-        if (request.getItems() == null) {
+    private void rebuildOrderItems(Order order, List<OrderUpdateItem> items) {
+        order.clearItems();
+        if (items == null) {
             return;
         }
 
-        for (UpdateOrderRequest.Item itemReq : request.getItems()) {
-            Product product = productRepository.findById(itemReq.getProductId())
-                .orElseThrow(() -> new IllegalArgumentException("Produto nao encontrado: " + itemReq.getProductId()));
-            OrderItem item = new OrderItem(order, product, itemReq.getQuantity(), product.getPrice());
-            order.getItems().add(item);
+        for (OrderUpdateItem item : items) {
+            Product product = productRepository.findById(item.productId())
+                .orElseThrow(() -> new IllegalArgumentException("Produto nao encontrado: " + item.productId()));
+            order.addItem(product, item.quantity(), product.getPrice());
         }
     }
 }

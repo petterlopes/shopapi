@@ -1,31 +1,21 @@
 package com.peritumct.shopapi.service.usecase;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import com.peritumct.shopapi.dto.OrderDetailDTO;
-import com.peritumct.shopapi.dto.OrderStatusUpdateRequest;
-import com.peritumct.shopapi.dto.OrderSummaryDTO;
-import com.peritumct.shopapi.dto.UpdateOrderRequest;
-import com.peritumct.shopapi.model.OrderStatus;
+import com.peritumct.shopapi.domain.order.Order;
+import com.peritumct.shopapi.domain.order.OrderSearchFilters;
+import com.peritumct.shopapi.domain.order.OrderStatus;
+import com.peritumct.shopapi.domain.order.OrderUpdateCommand;
+import com.peritumct.shopapi.domain.shared.PageRequest;
+import com.peritumct.shopapi.domain.shared.PageResult;
 
 public interface OrderUseCase {
 
-    OrderDetailDTO loadOrderDetail(Long id);
+    Order loadOrder(Long id);
 
-    Page<OrderSummaryDTO> searchOrders(OrderStatus status,
-                                       LocalDate from,
-                                       LocalDate to,
-                                       BigDecimal minTotal,
-                                       BigDecimal maxTotal,
-                                       Pageable pageable);
+    PageResult<Order> searchOrders(OrderSearchFilters filters, PageRequest pageRequest);
 
-    void updateOrder(Long id, UpdateOrderRequest request);
+    void updateOrder(Long id, OrderUpdateCommand command);
 
-    void updateStatus(Long id, OrderStatusUpdateRequest request);
+    void updateStatus(Long id, OrderStatus status);
 
     void delete(Long id);
 }

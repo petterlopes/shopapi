@@ -1,16 +1,16 @@
 # Shop API
 
-REST API para gestao de produtos, pedidos e pagamentos construida com Spring Boot 3.3, Java 17 e PostgreSQL. O projeto demonstra autenticacao stateless com JWT, autorizacao baseada em roles e filtros dinamicos com Spring Data Specifications.
+REST API para gestao de produtos, pedidos e pagamentos construída com Spring Boot 3.3, Java 17 e PostgreSQL. O projeto demonstra autenticacao stateless com JWT, autorizacao baseada em roles e filtros dinamicos com Specifications.
 
 ## Destaques
 
-- Autenticacao com JWT e filtro customizado (JwtAuthenticationFilter) que popula as roles extraidas do token.
-- Camada de aplicacao orientada a casos de uso (service.usecase) com servicos dedicados (*ApplicationService) que concentram regras, orquestram repositorios e expoem contratos limpos aos controladores.
-- Tratamento de erros consistente via ApiExceptionHandler, retornando ApiError para faltas de recurso (ResourceNotFoundException) e validacoes de negocio.
-- CRUD de produtos protegido por privilegios de staff e busca paginada por nome, categoria e faixa de preco (/api/products/search).
-- Pedidos com recalc de totais (ServicoDeCalculoDePreco), filtros por status/data/valor e aprovacao de pagamentos.
-- Seeds opcionais para usuarios e produtos via DbSeeder e bootstrap automatico de administrador (AdminBootstrap).
-- Documentacao OpenAPI via Springdoc e colecao do Insomnia versionada em Insomnia/ShopAPI-insomnia.json.
+- Autenticacao com JWT e filtro customizado (`JwtAuthenticationFilter`) que remonta as roles embutidas no token.
+- Camada de aplicacao orientada a casos de uso (`service.usecase`) que instancia servicos dedicados (`*ApplicationService`) para orquestrar regras e portas de dominio.
+- Dominio isolado em `domain.*`, sem annotations de frameworks, com repositorios como portas (interfaces) e servicos puros como `PriceCalculator`.
+- Adaptadores de infraestrutura em `infrastructure.persistence.*` traduzem entre entidades JPA e modelos de dominio via mapeadores dedicados.
+- Controladores REST mapeiam DTOs externos para comandos de dominio, mantendo o core independente.
+- Tratamento de erros consistente via `ApiExceptionHandler`, retornando `ApiError` para recursos inexistentes (`ResourceNotFoundException`) e violacoes de negocio.
+- Seeds opcionais para usuarios e produtos (`DbSeeder`, `AdminBootstrap`) e documentacao OpenAPI via Springdoc.
 
 ## Stack principal
 
@@ -19,25 +19,23 @@ REST API para gestao de produtos, pedidos e pagamentos construida com Spring Boo
 - PostgreSQL 13+
 - JJWT 0.11.5
 - Springdoc OpenAPI 2.5.0
-- Maven Wrapper (mvnw, mvnw.cmd)
+- Maven Wrapper (`mvnw`, `mvnw.cmd`)
 - Lombok (opcional para a IDE)
 
 ## Estrutura e pacotes
 
-- Pacote raiz: com.peritumct.shopapi
+- Pacote raiz: `com.peritumct.shopapi`
 - Pastas relevantes:
-  - pi para contratos de resposta HTTP transversais (ApiError).
-  - controller para endpoints REST.
-  - dto para modelos de transferencia.
-  - model para entidades JPA e enums (Order, OrderItem, Payment, Role, OrderStatus).
-  - 
-epository com JpaRepository e consultas customizadas.
-  - security para JWT, filtros, services e helpers.
-  - service com servicos de aplicacao e auxiliares de dominio.
-  - service.usecase define interfaces de casos de uso consumidas pelos controladores.
-  - service.exception concentra excecoes de dominio.
-  - service.spec agrupa Specifications reutilizaveis.
-  - init para carga inicial de dados.
+  - `controller` para endpoints REST e mapeamento DTO <-> dominio.
+  - `dto` para modelos de transferencia expostos externamente.
+  - `domain` para modelos, enums, comandos e portas independentes de framework.
+  - `config` para configuracoes cruzadas (ex.: registro de `PriceCalculator`).
+  - `infrastructure.persistence` para entidades JPA, mapeadores e adaptadores das portas de dominio.
+  - `security` para JWT, filtros, services e helpers de autorizacao.
+  - `service` para casos de uso (aplicacao), specs reutilizaveis e seeds.
+  - `service.exception` para excecoes de dominio.
+  - `service.spec` para Specifications de filtros dinâmicos.
+  - `init` para bootstrap de dados.
 
 ## Requisitos
 
@@ -49,17 +47,17 @@ epository com JpaRepository e consultas customizadas.
 
 Crie o banco e usuario padrao:
 
-`sql
+```sql
 CREATE DATABASE shopdb;
 CREATE USER shop WITH ENCRYPTED PASSWORD 'shop';
 GRANT ALL PRIVILEGES ON DATABASE shopdb TO shop;
-`
+```
 
 ## Configuracao de perfis
 
-Use o perfil local para desenvolvimento. Copie src/main/resources/application-local.properties (nao versionado em ambiente publico) e ajuste conforme necessario:
+Use o perfil `local` para desenvolvimento. Copie `src/main/resources/application-local.properties` (nao versionado publicamente) e ajuste conforme necessario:
 
-`properties
+```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/shopdb
 spring.datasource.username=shop
 spring.datasource.password=shop
@@ -71,13 +69,13 @@ app.jwt.secret=<chave-base64-256bits>
 app.jwt.exp-minutes=1440
 
 springdoc.swagger-ui.path=/swagger-ui.html
-`
+```
 
-> Gere uma chave forte para pp.jwt.secret, por exemplo openssl rand -base64 32. O valor deve ser Base64 de pelo menos 256 bits.
+> Gere uma chave forte para `app.jwt.secret`, por exemplo `openssl rand -base64 32`. O valor deve ser Base64 de pelo menos 256 bits.
 
 ## Execucao local
 
-`powershell
+```powershell
 # instalar dependencias e compilar
 .\mvnw.cmd clean package -DskipTests
 
@@ -86,63 +84,62 @@ springdoc.swagger-ui.path=/swagger-ui.html
 
 # ou via jar
 java -jar target\shopapi-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
-`
+```
 
 ## Usuarios seeds
 
-| usuario  | senha       | role     | origem             |
-|----------|-------------|----------|--------------------|
+| usuario  | senha       | role     | origem                    |
+|----------|-------------|----------|---------------------------|
 | admin    | admin123    | ADMIN    | AdminBootstrap / DbSeeder |
-| operator | operator123 | OPERATOR | DbSeeder           |
-| client   | client123   | USER     | DbSeeder           |
+| operator | operator123 | OPERATOR | DbSeeder                  |
+| client   | client123   | USER     | DbSeeder                  |
 
 As seeds sao criadas somente quando nao ha registros nas tabelas.
 
 ## Autenticacao JWT
 
-1. POST /api/auth/login
-   `json
+1. `POST /api/auth/login`
+   ```json
    {
      "username": "admin",
      "password": "admin123"
    }
-   `
+   ```
 2. Resposta:
-   `json
+   ```json
    { "token": "<jwt>" }
-   `
-3. Envie Authorization: Bearer <jwt> nas requisicoes protegidas.
-4. As roles sao adicionadas ao token e remontadas pelo JwtAuthenticationFilter. Garante prefixo ROLE_ para funcionar com @PreAuthorize.
+   ```
+3. Envie `Authorization: Bearer <jwt>` nas requisicoes protegidas.
+4. As roles sao adicionadas ao token e remontadas pelo `JwtAuthenticationFilter`, garantindo o prefixo `ROLE_` para uso com `@PreAuthorize`.
 
 ## Endpoints principais
 
 **Produtos**
-- GET /api/products - lista todos os produtos (qualquer usuario autenticado).
-- GET /api/products/{id} - consulta por id.
-- POST /api/products - cria produto (ADMIN ou OPERATOR).
-- PUT /api/products/{id} - atualiza produto (ADMIN ou OPERATOR).
-- DELETE /api/products/{id} - remove produto (ADMIN ou OPERATOR).
-- GET /api/products/search - busca paginada com filtros 
-ame, category, minPrice, maxPrice.
+- `GET /api/products` - lista todos os produtos (usuario autenticado).
+- `GET /api/products/{id}` - consulta por id.
+- `POST /api/products` - cria produto (ADMIN ou OPERATOR).
+- `PUT /api/products/{id}` - atualiza produto (ADMIN ou OPERATOR).
+- `DELETE /api/products/{id}` - remove produto (ADMIN ou OPERATOR).
+- `GET /api/products/search` - busca paginada com filtros `name`, `category`, `minPrice`, `maxPrice`.
 
 **Pedidos**
-- GET /api/orders - paginado; aceita filtros status, rom, 	o, minTotal, maxTotal.
-- GET /api/orders/{id} - retorna OrderDetailDTO com itens; acesso restrito ao dono ou staff via SecurityExpressions.
-- PUT /api/orders/{id} - atualiza itens, desconto e frete; recalcula totais; autorizado para dono ou staff.
-- PATCH /api/orders/{id}/status - atualiza status (atualiza totais apos a mudanca).
-- DELETE /api/orders/{id} - remove pedido (ADMIN).
+- `GET /api/orders` - paginado; aceita filtros `status`, `from`, `to`, `minTotal`, `maxTotal`.
+- `GET /api/orders/{id}` - retorna `OrderDetailDTO` com itens; acesso restrito ao dono ou staff via `SecurityExpressions`.
+- `PUT /api/orders/{id}` - atualiza itens, desconto e frete; delega recalculo ao `PriceCalculator`; autorizado para dono ou staff.
+- `PATCH /api/orders/{id}/status` - atualiza status (volta a recalcular totais).
+- `DELETE /api/orders/{id}` - remove pedido (ADMIN).
 
 **Pagamentos**
-- POST /api/orders/{orderId}/payments - cria pagamento do pedido (dono ou staff).
-- POST /api/orders/{orderId}/payments/{paymentId}/approve - aprova pagamento e coloca o pedido em PAID (ADMIN ou OPERATOR).
+- `POST /api/orders/{orderId}/payments` - cria pagamento do pedido (dono ou staff).
+- `POST /api/orders/{orderId}/payments/{paymentId}/approve` - aprova pagamento e coloca o pedido em `PAID` (ADMIN ou OPERATOR).
 
 ## Regras de negocio
 
-- Recalculo automatico de subtotal, desconto, frete e total com limite minimo zero.
-- Validacao de produtos ao atualizar itens de pedido.
-- Especificacoes JPA reutilizaveis para filtros de pedidos e produtos.
+- Recalculo automatico de subtotal, desconto, frete e total garantido por `PriceCalculator` no dominio.
+- Validacao de produtos ao reconstruir itens de pedido.
+- Specifications JPA reutilizaveis (`OrderSpecifications`, `ProductSpecifications`) isoladas na camada de infraestrutura.
 - Atualizacao de status do pedido ao aprovar pagamentos.
-- Controladores delegam a casos de uso, que disparam ResourceNotFoundException ou IllegalArgumentException e sao convertidos em respostas claras pelo ApiExceptionHandler.
+- Controladores delegam a casos de uso; estes disparam `ResourceNotFoundException` ou `IllegalArgumentException` convertidas em respostas claras pelo `ApiExceptionHandler`.
 
 ## Documentacao da API
 
@@ -151,32 +148,37 @@ ame, category, minPrice, maxPrice.
 
 ## Colecao Insomnia
 
-Importe Insomnia/ShopAPI-insomnia.json. A colecao inclui:
+Importe `Insomnia/ShopAPI-insomnia.json`. A colecao inclui:
 - Requests para login e renovacao de token.
 - Exemplos de chamadas separadas por role.
 - Variavel que injeta o token de login automaticamente.
 
 ## Comandos uteis
 
-- .\mvnw.cmd test - roda testes (quando existirem).
-- .\mvnw.cmd dependency:tree - inspeciona arvore de dependencias.
-- mvn clean - remove artefatos de build (executar antes de versionar).
+- `.\mvnw.cmd test` - roda testes (quando existirem).
+- `.\mvnw.cmd dependency:tree` - inspeciona a arvore de dependencias.
+- `mvn clean` - remove artefatos de build.
 
 ## Estrutura resumida
 
-`
+```
 src/
   main/
-    java/com/peritumct/shopapi/...
+    java/com/peritumct/shopapi/
+      controller/
+      domain/
+      infrastructure/
+      security/
+      service/
+      config/
     resources/
       application.properties
       application-local.properties (perfil dev)
 Insomnia/
   ShopAPI-insomnia.json
-  Insomnia_2025-08-12.yaml
 pom.xml
 README.md
-`
+```
 
 ## Licenca
 

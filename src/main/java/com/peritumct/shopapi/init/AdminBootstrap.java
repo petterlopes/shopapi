@@ -1,32 +1,28 @@
 package com.peritumct.shopapi.init;
 
+import com.peritumct.shopapi.domain.user.Role;
+import com.peritumct.shopapi.domain.user.User;
+import com.peritumct.shopapi.domain.user.port.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.peritumct.shopapi.model.Role;
-import com.peritumct.shopapi.model.User;
-import com.peritumct.shopapi.repository.IUserRepository;
-
 @Component
 public class AdminBootstrap implements CommandLineRunner {
 
-    private final IUserRepository repo;
+    private final UserRepository userRepository;
     private final PasswordEncoder encoder;
 
-    public AdminBootstrap(IUserRepository repo, PasswordEncoder encoder) {
-        this.repo = repo;
+    public AdminBootstrap(UserRepository userRepository, PasswordEncoder encoder) {
+        this.userRepository = userRepository;
         this.encoder = encoder;
     }
 
     @Override
-    public void run(String... args) throws Exception {
-        repo.findByUsername("admin").orElseGet(() -> {
-            User u = new User();
-            u.setUsername("admin");
-            u.setPassword(encoder.encode("admin123"));
-            u.setRole(Role.ADMIN);
-            return repo.save(u);
+    public void run(String... args) {
+        userRepository.findByUsername("admin").orElseGet(() -> {
+            User admin = new User(null, "admin", encoder.encode("admin123"), Role.ADMIN);
+            return userRepository.save(admin);
         });
     }
 }
